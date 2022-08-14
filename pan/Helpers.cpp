@@ -28,11 +28,11 @@ void Helpers::BindNativeFunctions() {
     JsValueRef console;
     JsCreateObject(&console);
 
-    Helpers::SetCallback(globalObject, L"require", NativeFunctions::Require, nullptr);
+    Helpers::SetCallback(globalObject, L"NATIVE_REQUIRE", NativeFunctions::Require, nullptr);
 
     Helpers::SetProperty(globalObject, L"console", console);
-    Helpers::SetCallback(console, L"log", NativeFunctions::Log, nullptr);
-    Helpers::SetCallback(console, L"clear", NativeFunctions::Clear, nullptr);
+    Helpers::SetCallback(console, L"log", NativeFunctions::Console::Log, nullptr);
+    Helpers::SetCallback(console, L"clear", NativeFunctions::Console::Clear, nullptr);
 }
 
 JsRuntimeHandle Helpers::CreateRuntimeAndContext() {

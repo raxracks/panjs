@@ -36,25 +36,27 @@ int main(int argc, char* argv[])
 			std::wcin >> script;
 		}
 
+		script = L"function require(p) {return NATIVE_REQUIRE(p, \"\")};\n" + script;
+
 		// run script and increment source context
 		JsRunScript(script.c_str(), CurrentSourceContext, L"", &result);
 
 		// convert the result to a js string
-		JsValueRef resultJSString;
-		JsConvertValueToString(result, &resultJSString);
+		/*JsValueRef resultJSString;
+		JsConvertValueToString(result, &resultJSString);*/
 
 		// convert the resultant js string to a c++ wide char string
-		const wchar_t* resultWC;
-		size_t stringLength;
-		JsStringToPointer(resultJSString, &resultWC, &stringLength);
+		//const wchar_t* resultWC;
+		//size_t stringLength;
+		//JsStringToPointer(resultJSString, &resultWC, &stringLength);
 
-		std::wstring resultW(resultWC);
+		//std::wstring resultW(resultWC);
 
-		HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+		//HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
 
-		SetConsoleTextAttribute(hConsole, resultW == L"undefined" ? 8 : 7);
-		//std::cout << std::string(resultW.begin(), resultW.end()) << std::endl;
-		SetConsoleTextAttribute(hConsole, 7);
+		//SetConsoleTextAttribute(hConsole, resultW == L"undefined" ? 8 : 7);
+		////std::cout << std::string(resultW.begin(), resultW.end()) << std::endl;
+		//SetConsoleTextAttribute(hConsole, 7);
 
 		if (argc > 1) Looping = false;
 	}
