@@ -56,12 +56,7 @@ JsValueRef CALLBACK NativeFunctions::Require(JsValueRef callee, bool isConstruct
 	size_t DirectoryNameLength;
 	JsStringToPointer(DirectoryStringValue, &DirectoryW, &DirectoryNameLength);
 	std::string Directory = Helpers::WStringToString(DirectoryW);
-
-#if DEBUG
-	std::cout << "Require file: " << FileName << " Dir: " << Directory << std::endl;
-#endif // DEBUG
 	
-
 	if(Helpers::StringStartsWith(FileName, ".")) {
 		FileName = Directory + FileName;
 	}
@@ -109,10 +104,6 @@ JsValueRef CALLBACK NativeFunctions::Require(JsValueRef callee, bool isConstruct
 
 	JsValueRef ExportsResult;
 
-#ifdef DEBUG
-	std::cout << "Read File: " << FileName << std::endl;
-#endif // DEBUG
-
 	std::wstring ModuleScript = Helpers::StringToWString(Helpers::ReadFile(FileName));
 
 	// monstrosity
@@ -138,7 +129,7 @@ std::queue<Task*> TaskQueue;
 
 void CALLBACK NativeFunctions::PromiseContinuationCallback(JsValueRef task, void* callbackState)
 {
-	// Save promises in taskQueue.
+	// save promises in queue
 	JsValueRef global;
 	JsGetGlobalObject(&global);
 	std::queue<Task*>* q = (std::queue<Task*> *)callbackState;

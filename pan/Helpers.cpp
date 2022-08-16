@@ -2,11 +2,11 @@
 #include <vector>
 #include <fstream>
 #include <algorithm>
+#include <queue>
 
 #include "Helpers.h"
 #include "NativeFunctions.h"
 #include "Task.h"
-#include <queue>
 
 void Helpers::SetProperty(JsValueRef object, const wchar_t* propertyName, JsValueRef property)
 {
