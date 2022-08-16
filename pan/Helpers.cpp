@@ -5,6 +5,8 @@
 
 #include "Helpers.h"
 #include "NativeFunctions.h"
+#include "Task.h"
+#include <queue>
 
 void Helpers::SetProperty(JsValueRef object, const wchar_t* propertyName, JsValueRef property)
 {
@@ -30,9 +32,14 @@ void Helpers::BindNativeFunctions() {
 
     Helpers::SetCallback(globalObject, L"NATIVE_REQUIRE", NativeFunctions::Require, nullptr);
 
+    Helpers::SetCallback(globalObject, L"setTimeout", NativeFunctions::SetTimeout, nullptr);
+    Helpers::SetCallback(globalObject, L"setInterval", NativeFunctions::SetInterval, nullptr);
+
     Helpers::SetProperty(globalObject, L"console", console);
     Helpers::SetCallback(console, L"log", NativeFunctions::Console::Log, nullptr);
     Helpers::SetCallback(console, L"clear", NativeFunctions::Console::Clear, nullptr);
+
+    NativeFunctions::Bootstrap();
 }
 
 JsRuntimeHandle Helpers::CreateRuntimeAndContext() {

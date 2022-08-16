@@ -1,6 +1,8 @@
 #pragma once
 #include <ChakraCore.h>
 #include <string>
+#include <queue>
+#include "Task.h"
 
 static class Helpers {
 public:

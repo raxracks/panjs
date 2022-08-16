@@ -7,6 +7,7 @@
 
 #include "Helpers.h"
 #include "pan.h"
+#include "NativeFunctions.h"
 
 #define VERSION "0.0.1"
 
@@ -40,6 +41,8 @@ int main(int argc, char* argv[])
 
 		// run script and increment source context
 		JsRunScript(script.c_str(), CurrentSourceContext, L"", &result);
+
+		NativeFunctions::WhileQueueNotEmpty();
 
 		// convert the result to a js string
 		/*JsValueRef resultJSString;

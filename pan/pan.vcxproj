@@ -138,6 +138,7 @@
     <ClCompile Include="Helpers.cpp" />
     <ClCompile Include="NativeFunctions.cpp" />
     <ClCompile Include="pan.cpp" />
+    <ClCompile Include="Task.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\ChakraCommon.h" />
@@ -148,6 +149,7 @@
     <ClInclude Include="Helpers.h" />
     <ClInclude Include="NativeFunctions.h" />
     <ClInclude Include="pan.h" />
+    <ClInclude Include="Task.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -46,23 +46,24 @@ JsValueRef CALLBACK NativeFunctions::Require(JsValueRef callee, bool isConstruct
 	JsValueRef FileStringValue;
 	JsConvertValueToString(arguments[1], &FileStringValue);
 	const wchar_t* FileNameW;
-	size_t Length;
-	JsStringToPointer(FileStringValue, &FileNameW, &Length);
+	size_t FileNameLength;
+	JsStringToPointer(FileStringValue, &FileNameW, &FileNameLength);
 	std::string FileName = Helpers::WStringToString(FileNameW);
-	std::wstring Directory = L"";
 
-	JsValueRef stringValue;
-	JsConvertValueToString(arguments[2], &stringValue);
-	const wchar_t* string;
-	size_t length;
-	JsStringToPointer(stringValue, &string, &length);
+	JsValueRef DirectoryStringValue;
+	JsConvertValueToString(arguments[2], &DirectoryStringValue);
+	const wchar_t* DirectoryW;
+	size_t DirectoryNameLength;
+	JsStringToPointer(DirectoryStringValue, &DirectoryW, &DirectoryNameLength);
+	std::string Directory = Helpers::WStringToString(DirectoryW);
 
-	Directory = string;
-
-	std::cout << "Require file: " << FileName << " Dir: " << Helpers::WStringToString(Directory) << std::endl;
+#if DEBUG
+	std::cout << "Require file: " << FileName << " Dir: " << Directory << std::endl;
+#endif // DEBUG
+	
 
 	if(Helpers::StringStartsWith(FileName, ".")) {
-		FileName = Helpers::WStringToString(Directory) + FileName;
+		FileName = Directory + FileName;
 	}
 
 	if (Helpers::StringEndsWith(FileName, ".json")) {
@@ -93,13 +94,13 @@ JsValueRef CALLBACK NativeFunctions::Require(JsValueRef callee, bool isConstruct
 		FileName = "./node_modules/" + FileName + "/" + PackageJSON; 
 
 		std::size_t DirectoryPosition = FileName.find_last_of("/");
-		Directory = Helpers::StringToWString(FileName.substr(0, DirectoryPosition));
+		Directory = FileName.substr(0, DirectoryPosition);
 	}
 
 	if (Helpers::StringStartsWith(FileName, ".") && !Helpers::StringEndsWith(FileName, ".js")) FileName += ".js";
 
 	// check if module and its exports already exist in cache
-	for (std::pair<std::string, JsValueRef> CacheItem : RequireCache) {
+	for (auto CacheItem : RequireCache) {
 		if (CacheItem.first == FileName) {
 			// return module exports if in cache
 			return CacheItem.second;
@@ -108,16 +109,18 @@ JsValueRef CALLBACK NativeFunctions::Require(JsValueRef callee, bool isConstruct
 
 	JsValueRef ExportsResult;
 
+#ifdef DEBUG
 	std::cout << "Read File: " << FileName << std::endl;
+#endif // DEBUG
 
 	std::wstring ModuleScript = Helpers::StringToWString(Helpers::ReadFile(FileName));
 
 	// monstrosity
 	ModuleScript =
 		L"(function(module,exports,path){exports=module.exports;\n"
-		L"function require(p){console.log(\"rqr\", p, path);return NATIVE_REQUIRE(p,path)};\n" +
+		L"function require(p){return NATIVE_REQUIRE(p,path)};\n" +
 		ModuleScript +
-		L"\nreturn typeof module.exports!==\"object\"||typeof exports!==\"object\"?typeof module.exports!==\"object\"?module.exports:exports:module.exports.length>0&&exports.length>0?module.exports.length>0?module.exports:exports:this;\n})({id:'.',exports:{}},undefined,\"" + Directory + L"\"); ";
+		L"\nreturn typeof module.exports!==\"object\"||typeof exports!==\"object\"?typeof module.exports!==\"object\"?module.exports:exports:module.exports.length>0&&exports.length>0?module.exports.length>0?module.exports:exports:this;\n})({id:'.',exports:{}},undefined,\"" + Helpers::StringToWString(Directory) + L"\"); ";
 
 	// run module script and increment source context
 	JsRunScript(ModuleScript.c_str(), CurrentSourceContext, L"", &ExportsResult);
@@ -129,4 +132,57 @@ JsValueRef CALLBACK NativeFunctions::Require(JsValueRef callee, bool isConstruct
 	RequireCache.push_back(std::make_pair(FileName, ModuleExportsObject));
 
 	return ModuleExportsObject;
+}
+
+std::queue<Task*> TaskQueue;
+
+void CALLBACK NativeFunctions::PromiseContinuationCallback(JsValueRef task, void* callbackState)
+{
+	// Save promises in taskQueue.
+	JsValueRef global;
+	JsGetGlobalObject(&global);
+	std::queue<Task*>* q = (std::queue<Task*> *)callbackState;
+	q->push(new Task(task, 0, global, JS_INVALID_REFERENCE));
+}
+
+void NativeFunctions::Bootstrap() {
+	JsSetPromiseContinuationCallback(NativeFunctions::PromiseContinuationCallback, &TaskQueue);
+}
+
+JsValueRef CALLBACK NativeFunctions::SetTimeout(JsValueRef callee, bool isConstructCall, JsValueRef* arguments, unsigned short argumentCount, void* callbackState) {
+	JsValueRef func = arguments[1];
+	int delay = 0;
+	JsNumberToInt(arguments[2], &delay);
+	TaskQueue.push(new Task(func, delay, arguments[0], JS_INVALID_REFERENCE));
+	return JS_INVALID_REFERENCE;
+}
+
+JsValueRef CALLBACK NativeFunctions::SetInterval(JsValueRef callee, bool isConstructCall, JsValueRef* arguments, unsigned short argumentCount, void* callbackState)
+{
+	JsValueRef func = arguments[1];
+	int delay = 0;
+	JsNumberToInt(arguments[2], &delay);
+	TaskQueue.push(new Task(func, delay, arguments[0], JS_INVALID_REFERENCE, true));
+	return JS_INVALID_REFERENCE;
+}
+
+void NativeFunctions::WhileQueueNotEmpty() {
+	while (!TaskQueue.empty()) {
+		Task* task = TaskQueue.front();
+		TaskQueue.pop();
+		int currentTime = clock() / (double)(CLOCKS_PER_SEC / 1000);
+		if (currentTime - task->_time > task->_delay) {
+			task->invoke();
+			if (task->_repeat) {
+				task->_time = currentTime;
+				TaskQueue.push(task);
+			}
+			else {
+				delete task;
+			}
+		}
+		else {
+			TaskQueue.push(task);
+		}
+	}
 }

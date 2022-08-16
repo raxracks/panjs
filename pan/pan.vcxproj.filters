@@ -24,6 +24,9 @@
     <ClCompile Include="Helpers.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Task.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\ChakraCommon.h">
@@ -48,6 +51,9 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="pan.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Task.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>
